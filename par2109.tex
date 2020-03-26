@@ -105,7 +105,7 @@ linenos
         the loop where we set the number of threads with the function \texttt{omp\_set\_num\_threads(i)} and
         3 for the second iteration. The third parallel runs 4 times since we specify 4 threads on the
         pragma. The last parallel region prints 3 times since the call \texttt{omp\_set\_num\_threads(3)} 
-        set the threads to 3. This makes a total of  8 + 2 + 3 + 4 + 3 = 20.
+        set the threads to 3. This makes a total of:  8 + 2 + 3 + 4 + 3 = 20.
         \item Inside the parallel region it returns the number of threads executed in parallel, outside it
         returns 1 since there is only on thread.
     \end{enumerate}
@@ -260,13 +260,15 @@ while (p != NULL) {
     \textbf{3.synchtasks.c:}
     \begin{enumerate}[label=\arabic*.]
         \item As we can see in Figure~\ref{graph:3synchtasks} \texttt{foo1} and \texttt{foo2} must be done before \texttt{foo4} and at the same time \texttt{foo4} before \texttt{foo5}.
-        \begin{figure}[h!]
+        \begin{figure}[H]
         \centering
-        \includegraphics[width=0.4\textwidth]{3.synchtasks_taskDependence.png}
+        \includegraphics[width=0.35\textwidth]{3.synchtasks_taskDependence.png}
         \caption{Task dependence graph of \texttt{3.synchtasks.c}}
         \label{graph:3synchtasks}
         \end{figure}
-        \item .
+        \item To make the program execute properly using only \texttt{taskwait}, we have to put a one
+        \texttt{taskwait} before every task that has a dependency, in this case we put them before
+        \texttt{foo4} and \texttt{foo5}:
         
         \begin{minted}[firstnumber=41]{cpp}
 int main(int argc, char *argv[]) {
@@ -323,24 +325,44 @@ int main(int argc, char *argv[]) {
 \toprule
     & 1 thread & 4 threads & 8 threads \\
 \midrule
-    \texttt{Atomic}      & 1.820260s     & 6.537028s     & 6.638720s     \\
     \texttt{Critical}    & 4.358014s     & 37.993402s    & 35.054946s    \\
+    \texttt{Atomic}      & 1.820260s     & 6.537028s     & 6.638720s     \\
     \texttt{Reduction}   & 1.838303s     & 0.475096s     & 0.251802s     \\
     \texttt{Sumlocal}    & 1.844493s     & 0.482096s     & 0.249314s     \\
 \bottomrule
 \end{tabular}
-%la podemos poner como tabla de siunitx % ok
-% ya estan todos los plots, no se quales poner.
-% quieres mirar a ver k te parecen? okay
-% estan muy guapos, quedan muy bien
-% tampoco hay muchos yo los pondria todos (sin repetir) porque el de 4X4 junta varios no?
-\label{tab:}
+
+\caption{Execution times of 100.000.000 iterations} 
+\label{tab:Execution_time}
 \end{table}
-% acabo de leerme lo que la tabla y la comento
+
+%Take a look at the four different versions and make sure you understand them.  For example, how many synchronisation operations (critical or atomic) are executed in each version?
+
+%If executed with only 1 thread and 100.000.000 iterations, do you observe any major overhead in the execution time caused by the use of the different synchronisation mechanisms? You can compare with the baseline execution time of the sequential version in pisequential.c. = 1.793754101s
+
+As shown in table~\ref{tab:Execution_time} when executing with only one thread and 100.000.000 iterations we notice that there is a major overhead with the \texttt{critical} synchronisation mechanism
+
+%If executed with 4 and 8 threads and the same number of iterations,  do the 4 programs benefit from the use of several processors in the same way?  Can you guess the reason for this behaviour.
 
 
 \subsection{Thread creation and termination}
 
+As we can see in figure~\ref{fig:parallel} the overhead of creating/terminating threads increases with the number of threads.
+
+\begin{figure}[H]
+    \centering
+    \caption{Overhead plots for \texttt{pi\_omp\_parallel 1 24}}%
+    \label{fig:parallel}
+    \includegraphics[width=0.9\textwidth]{data/parallel_sub.pdf}
+\end{figure}
+
 \subsection{Task creation and synchronization}
+
+\begin{figure}[H]
+    \centering
+    \caption{Overhead plots for \texttt{pi\_omp\_tasks 10 1}}%
+    \label{fig:task}
+    \includegraphics[width=0.9\textwidth]{data/tasks_sub.pdf}
+\end{figure}
 
 \end{document}
