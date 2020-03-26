@@ -70,20 +70,16 @@ linenos
 }
 \end{titlepage}
 
-\pagebreak
-
-% \pagebreak
-% \tableofcontents
-% \pagebreak
 % \pagenumbering{arabic} 
-
+% vale perf, lo envias tu? okidoki
+% seems good to me %perf
 \section{OpenMP questionnaire}%
 \label{sec:OpenMP questionnaire}
 
 %When answering to the questions in this questionnaire, please DO NOT simply answer with yes, no or a number; try to minimally justify all your answers and if necessary include any code fragment you need to support your answer.  Sometimes you may need to execute several times in order to see the effect of data races in the parallel execution.
 
-\begin{enumerate}[label=\Alph*)]
-    \item Parallel regions \\
+\begin{enumerate}[label=\textbf{\Alph*)}]
+    \item \textbf{Parallel regions} \\
     \textbf{1.hello.c:}
     \begin{enumerate}[label=\arabic*.]
         \item 24 since the boada server has 24 cores so \emph{OpenMP} defaults to 24 threads.
@@ -118,53 +114,73 @@ linenos
         each thread is initialized with the value on the main thread and with \texttt{private} it's not.
         Finally, with \texttt{reduction} it's always 125. Which is $5 + 1 + 2 + \dots + 16$.
     \end{enumerate}
-    \item Loop parallelism \\
+    \pagebreak
+    \item \textbf{Loop parallelism} \\
     \textbf{1.schedule.c:}
-    \begin{enumerate}[label=\arabic*.]
-        \item  % Aqui metemos una tabla, no? YES
-    \end{enumerate}
+        \begin{itemize}
+            \item[] \texttt{static}: The threads get assigned iterations is chunks of 3 $(12/4=3)$ in order: the first thread gets iterations 0 to 2,
+            the seconds gets 3 to 5 an so on.
+            \item[] \texttt{static, 2}: The threads get assigned iterations in chunks of 2 in order: the first thread gets iterations 0 and 1,
+            the second 2 and 3 and so on. Since there are not enough threads to run all the 12 iterations in parallel in chunks of 2,
+            the first and second thread also get assigned the iterations 8,9 and 10,11 respectively.
+            \item[] \texttt{dynamic, 2}: The threads get assigned iterations in chunks of 2 without any other. The order will depend on
+            which thread is available to process the chunks as they are needed.
+            \item[] \texttt{guided, 2}: With guided scheduling the threads get assigned iterations initially in chunks of 2 but the size
+            of the chunks increases throughout the loop.
+        \end{itemize}
     \textbf{2.nowait.c:}
     \begin{enumerate}[label=\arabic*.]
-        \item The only possible sequences of \texttt{printf} are: % esto no lo tengo claro, pork si es dynamic i no se espera puede que pase qualquier combinacion, no? PUES TIENE PINTA QUE ES LO TUYO, ASÍ QUE DECIMOS ESO Y PONEMOS UN EJEMPLO (ya lo hago yo).
-        \begin{quote}
-            \texttt{Loop 1: thread (0) gets iteration 0 \\
-            Loop 1: thread (1) gets iteration 1 \\
-            Loop 2: thread (2) gets iteration 2 \\
-            Loop 2: thread (3) gets iteration 3}
-        \end{quote}
-        also:
-        \begin{quote}
-            \texttt{Loop 1: thread (0) gets iteration 0 \\
-            Loop 1: thread (1) gets iteration 1 \\
-            Loop 2: thread (3) gets iteration 2 \\
-            Loop 2: thread (2) gets iteration 3}
-        \end{quote}
-        and:
-        \begin{quote}
-            \texttt{Loop 1: thread (0) gets iteration 0 \\
-            Loop 1: thread (3) gets iteration 1 \\
-            Loop 2: thread (1) gets iteration 2 \\
-            Loop 2: thread (2) gets iteration 3}
-        \end{quote}
+        \item Any thread can get any of the iterations because the scheduling is dynamic so there is no order guaranteed, the only thing we can know is that the first thread will be assigned to the first iteration of the loop.
+        
+        % The possible sequences of \texttt{printf} are all the : % esto no lo tengo claro, pork si es dynamic i no se espera puede que pase qualquier combinacion, no? PUES TIENE PINTA QUE ES LO TUYO, ASÍ QUE DECIMOS ESO Y PONEMOS UN EJEMPLO (ya lo hago yo). HAGO ESTO y luego la tabla si e sisi
+        % ok yo quitaria la mayoria de mierdas esta de quote pot tampoco aportan mucho
+        % gracias! estaba en blanco jajaja
+        % yo despues de escribir toda la mierda de antes ya estoy en modo bullshit total 
+        % te rellen aqui qualquier chorrada en un plis plas
+        % jajajaj me sirve, tu bullshit no es tan bullshit como crees 
+        % the good kind of bullshit jajajaja
+        
+        % se pueden borrar las quotes
+        %\begin{quote}
+        %    \texttt{Loop 1: thread (0) gets iteration 0 \\
+        %    Loop 1: thread (1) gets iteration 1 \\
+        %    Loop 2: thread (2) gets iteration 2 \\
+        %    Loop 2: thread (3) gets iteration 3}
+        %\end{quote}
+        %also:
+        %\begin{quote}
+        %    \texttt{Loop 1: thread (0) gets iteration 0 \\
+        %    Loop 1: thread (1) gets iteration 1 \\
+        %    Loop 2: thread (3) gets iteration 2 \\
+        %    Loop 2: thread (2) gets iteration 3}
+        %\end{quote}
+        %and:
+        %\begin{quote}
+        %    \texttt{Loop 1: thread (0) gets iteration 0 \\
+        %    Loop 1: thread (3) gets iteration 1 \\
+        %    Loop 2: thread (1) gets iteration 2 \\
+        %    Loop 2: thread (2) gets iteration 3}
+        %\end{quote}
         \item If we remove the \texttt{nowait}, the iterations must finish before the loop continues, so Loop 1 will always output before Loop 2.
         %  Pues nose, borraamos los ejemplos o como lo explico? YO SI BORRARIA LOS EJEMPLOS CON LO QUE DICES YA QUEDA CLARO CREO YO.
-        In this case the only possible sequences are:
-        \begin{quote}
-            \texttt{Loop 1: thread (0) gets iteration 0 \\
-            Loop 1: thread (1) gets iteration 1 \\
-            Loop 2: thread (2) gets iteration 2 \\
-            Loop 2: thread (3) gets iteration 3}
-        \end{quote}
-        and:
-        \begin{quote}
-            \texttt{Loop 1: thread (1) gets iteration 0 \\
-            Loop 1: thread (0) gets iteration 1 \\
-            Loop 2: thread (3) gets iteration 2 \\
-            Loop 2: thread (2) gets iteration 3}
-        \end{quote}
+        %In this case the only possible sequences are:
+        %\begin{quote}
+        %    \texttt{Loop 1: thread (0) gets iteration 0 \\
+        %    Loop 1: thread (1) gets iteration 1 \\
+        %    Loop 2: thread (2) gets iteration 2 \\
+        %    Loop 2: thread (3) gets iteration 3}
+        %\end{quote}
+        %and:
+        %\begin{quote}
+        %    \texttt{Loop 1: thread (1) gets iteration 0 \\
+        %    Loop 1: thread (0) gets iteration 1 \\
+        %    Loop 2: thread (3) gets iteration 2 \\
+        %    Loop 2: thread (2) gets iteration 3}
+        %\end{quote}
         
         \item If we change \texttt{dynamic} to \texttt{static}, the order of assignment of the threads will be the same,
-        even with the \texttt{nowait} clause. And only 2 threads will be used since the for loops have 2 iterations.
+        even with the \texttt{nowait} clause. And only 2 threads will be used since the for loops have 2 iterations. The
+        output will always be:
         \begin{quote}
             \texttt{Loop 1: thread (0) gets iteration 0 \\
             Loop 1: thread (1) gets iteration 1 \\
@@ -176,30 +192,31 @@ linenos
     \textbf{3.collapse.c:}
     \begin{enumerate}[label=\arabic*.]
         \item As shown in the next table, the thread 0 execute the first four iterations, the thread 1 executes the next three consecutive iterations and so on until the thread number 7 executes the three last iterations of the loop.
-        \begin{table}[H]%se puede borrar perfectamente
-        \centering
-        \begin{tabular}{cl}
-        \toprule
-            Thread & Iterations \\
-        \midrule
-            0   & $(0\, 0) \rightarrow (0\, 3)$ \\
-            1   & $(0\, 4) \rightarrow (1\, 1)$ \\
-            2   & $(1\, 2) \rightarrow (1\, 4)$ \\
-            3   & $(2\, 0) \rightarrow (2\, 2)$ \\
-            4   & $(2\, 3) \rightarrow (3\, 0)$ \\
-            5   & $(3\, 1) \rightarrow (3\, 3)$ \\
-            6   & $(3\, 4) \rightarrow (4\, 1)$ \\
-            7   & $(4\, 2) \rightarrow (4\, 4)$ \\
-        \bottomrule
-        \end{tabular}
-        \label{tab:3.collapse-thread-iterations}
-        \end{table}
+        %\begin{table}[H]%se puede borrar perfectamente
+        %\centering
+        %\begin{tabular}{cl}
+        %\toprule
+        %    Thread & Iterations \\
+        %\midrule
+        %    0   & $(0\, 0) \rightarrow (0\, 3)$ \\
+        %    1   & $(0\, 4) \rightarrow (1\, 1)$ \\
+        %    2   & $(1\, 2) \rightarrow (1\, 4)$ \\
+        %    3   & $(2\, 0) \rightarrow (2\, 2)$ \\
+        %    4   & $(2\, 3) \rightarrow (3\, 0)$ \\
+        %    5   & $(3\, 1) \rightarrow (3\, 3)$ \\
+        %    6   & $(3\, 4) \rightarrow (4\, 1)$ \\
+        %    7   & $(4\, 2) \rightarrow (4\, 4)$ \\
+        %\bottomrule
+        %\end{tabular}
+        %\label{tab:3.collapse-thread-iterations}
+        %\end{table}
         \item Without \texttt{collapse} it's not correct, not all indices of the matrix are shown, because \texttt{j} is declared
         before the pragma and therefore it's shared among the threads which. We should add the \texttt{private(j)} clause so that the different 
         threads don't interfere with one another.
 
     \end{enumerate}
-    \item Synchronization \\
+    \pagebreak
+    \item \textbf{Synchronization} \\
     \textbf{1.datarace.c:}
     \begin{enumerate}[label=\arabic*.]
         \item We tried 100 executions of the program with: 
@@ -232,7 +249,8 @@ linenos
         \item If we modify the clause \texttt{schedule} to include a chunk size of 2 like so: \texttt{schedule( dynamic, 2)} the tasks
         will get assigned 2 consecutive iteration of the loop.
     \end{enumerate}
-    \item Tasks \\
+    \pagebreak
+    \item \textbf{Tasks} \\
     \textbf{1.single.c:}
     \begin{enumerate}[label=\arabic*.]
         \item Since we have the \texttt{nowait} clause on our \texttt{single} directive, all four threads are assigned the single clauses
@@ -319,6 +337,13 @@ int main(int argc, char *argv[]) {
 
 \subsection{Synchronisation overheads}
 
+%Take a look at the four different versions and make sure you understand them.  For example, how many synchronisation operations (critical or atomic) are executed in each version?
+% esto no se verlo y xD 
+
+%atmoc i critical hacen el mismo numero de syncros 1 antes 1 una despues % solo 2? y que tienen de distinto?
+%creo k sumlocal hace lo mismo que reduction en el fondo Lo que no veo es pork hay tanta differencia% ya pero en teoria hacen lo mismo, no? mmmh
+%no hay mucha dif entre estos dos justamente no? yokse
+
 \begin{table}[H]
 \centering
 \begin{tabular}{lrrr}
@@ -329,6 +354,8 @@ int main(int argc, char *argv[]) {
     \texttt{Atomic}      & 1.820260s     & 6.537028s     & 6.638720s     \\
     \texttt{Reduction}   & 1.838303s     & 0.475096s     & 0.251802s     \\
     \texttt{Sumlocal}    & 1.844493s     & 0.482096s     & 0.249314s     \\
+\midrule
+    Sequential version   & 1.793754s     &               &               \\
 \bottomrule
 \end{tabular}
 
@@ -336,18 +363,57 @@ int main(int argc, char *argv[]) {
 \label{tab:Execution_time}
 \end{table}
 
-%Take a look at the four different versions and make sure you understand them.  For example, how many synchronisation operations (critical or atomic) are executed in each version?
-
 %If executed with only 1 thread and 100.000.000 iterations, do you observe any major overhead in the execution time caused by the use of the different synchronisation mechanisms? You can compare with the baseline execution time of the sequential version in pisequential.c. = 1.793754101s
 
-As shown in table~\ref{tab:Execution_time} when executing with only one thread and 100.000.000 iterations we notice that there is a major overhead with the \texttt{critical} synchronisation mechanism
+%As shown in table~\ref{tab:Execution_time} when executing with only one thread and 100.000.000 iterations we notice that there is a major overhead with the \texttt{critical} synchronisation mechanism as it's more than double the time of sequential version in \texttt{pisequential.c}.
+%This is because each access to \emph{sum} in the \texttt{critical} version is protected ensuring exclusive access to it so that it can only be accessed
+%by one thread at a time which introduces synchronization for every iteration of the loop.
+
+\begin{itemize}
+\item[--] \texttt{critical}: The \texttt{critical} region protects access to the sum ensuring exclusive access to it. This means
+that it can only be accessed by one thread at a time and that we have to perform a synchronization for every iteration of the loop.
+This introduces massive overhead while giving no real benefit since most of the code is affected by this region an thus is not
+parallel. In the table we can appreciate how much more time it takes (even in the 1 thread version) compared to the sequential version
+and the rest of the parallel versions.
+\item[--] \texttt{atomic}: This is similar to the \texttt{critical} region since it protects the same variable, the main difference
+is that the synchronization is performed at the memory access at a hardware level which allows for a smaller sequential region to
+synchronize. We can see in the table that is much better than its \texttt{critical} counterpart but it still introduces too much
+overhead when having to synchronize multiple threads.
+\item[--] \texttt{reduction}: In this version the synchronization only occurs once all the tasks generated by the for loop finish
+and then their values for \emph{sum} which where independent for each thread are added together. This allows the parallel execution
+of all the tasks generated by the \texttt{for} loop since there is no dependence between the iterations. This is reflected on the
+results shown on the table in which we achieve an Speedup of 7.12 with 8 threads.
+\item[--] \texttt{sumlocal}: This version of the code performs the same operations that \texttt{reduction}, but instead of
+using the built-in directive of \emph{OpenMP} the code is modified to perform the reduction manually. The results obtained are
+very similar to the \texttt{reduction}, this shows that both versions are equivalent.
+\end{itemize}
+
+%i que ponemos?
+%la idea es meter lo k ya tenemos en la bullet list. para que quede todo similar y se lea fluido. 
+% pero claro es raro.
+% igual primero una aclaracion sobre al ejecucion en 1 thread i luego hablas de multithreads en la lista.This me gusta
+% puedes utilizar lo de abajo ~/ref{this} lol jeje
+
+%con que digas quantas operaciones de syncro haces en cada cosa ya queda bien explicado diria. ves a donde estoy yo XD
 
 %If executed with 4 and 8 threads and the same number of iterations,  do the 4 programs benefit from the use of several processors in the same way?  Can you guess the reason for this behaviour.
 
+%We can also observe that when executed with 4 and 8 threads and the same number of iterations the \texttt{critical} and the \texttt{atomic} versions increase their execution times unlike the \texttt{reduction} and \texttt{sumlocal} versions that their execution times is reduced because ... % explicar lo de abajo resumido?
+
+%\label{this}
+% piompcritical.c: a critical region is used to protect every access to sum, ensuring exclusive access to it.  This version is equivalent topi-v4.
+% piompatomic.c: it makes use of atomic to guarantee atomic (indivisible) access to the memory location where variable sum is stored. This version is equivalent topi-v5
+% piompreduction.c: it makes use of the reduction clause applied to the global variable sum.This version is equivalent topi-v7.
+%piompsumlocal.c: a “per–thread” private copy sumlocal is used followed by a global update at the end using only one critical region. This version is equivalent topi-v6.
+
+\pagebreak
+\null\vfill 
 
 \subsection{Thread creation and termination}
+As we can see in figure~\ref{fig:parallel} the overhead of creating/terminating threads increases with the number of threads in a mostly linear way, the main exception is the execution with 2 threads where there is more overhead than
+with  3 to 5 threads. We can also see that the overhead per thread decreases and seems to stabilize at around 0.14 seconds.
 
-As we can see in figure~\ref{fig:parallel} the overhead of creating/terminating threads increases with the number of threads.
+\vspace{5em}
 
 \begin{figure}[H]
     \centering
@@ -355,8 +421,19 @@ As we can see in figure~\ref{fig:parallel} the overhead of creating/terminating 
     \label{fig:parallel}
     \includegraphics[width=0.9\textwidth]{data/parallel_sub.pdf}
 \end{figure}
+\null\vfill
 
+\pagebreak
+\null\vfill
 \subsection{Task creation and synchronization}
+
+Figure~\ref{fig:task} shows the overhead of task creation and synchronization. There is clearly a linear
+trend between the number of tasks created and the overhead of the program, which is further reinforced by the
+fact that the overhead per task is nearly the same throughout the different number of tasks (the y
+axis ranges from 0.122 to 0.130. As with the previous section, the overhead per task is more noticeable
+at the very first few values.
+
+\vspace{5em}
 
 \begin{figure}[H]
     \centering
@@ -364,5 +441,7 @@ As we can see in figure~\ref{fig:parallel} the overhead of creating/terminating 
     \label{fig:task}
     \includegraphics[width=0.9\textwidth]{data/tasks_sub.pdf}
 \end{figure}
+
+\null\vfill
 
 \end{document}
