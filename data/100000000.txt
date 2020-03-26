@@ -1,0 +1,13 @@
+100000000.txt 100000000.txt
+atomic 1.txt 1.820260s
+atomic 4.txt 6.537028s
+atomic 8.txt 6.638720s
+critical 1.txt 4.358014s
+critical 4.txt 37.993402s
+critical 8.txt 35.054946s
+reduction 1.txt 1.838303s
+reduction 4.txt 0.475096s
+reduction 8.txt 0.251802s
+sumlocal 1.txt 1.844493s
+sumlocal 4.txt 0.482096s
+sumlocal 8.txt 0.249314s
