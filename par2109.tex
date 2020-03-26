@@ -4,8 +4,24 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{lipsum}
 
 \usepackage{siunitx}
+\usepackage{hyphenat}
+
+\usepackage{xcolor}
+
+\usepackage{minted}
+\setminted{
+frame=lines,
+framesep=2mm,
+baselinestretch=1.2,
+breaklines,
+%bgcolor=LightGray,
+fontsize=\footnotesize,
+linenos
+}
 
 \renewcommand\theadfont{\bfseries}
 
@@ -64,14 +80,263 @@
 \section{OpenMP questionnaire}%
 \label{sec:OpenMP questionnaire}
 
-\begin{enumerate}
-    \item Parallel regions
-    \item Loop parallelism
-    \item Synchronization
-    \item Tasks
+%When answering to the questions in this questionnaire, please DO NOT simply answer with yes, no or a number; try to minimally justify all your answers and if necessary include any code fragment you need to support your answer.  Sometimes you may need to execute several times in order to see the effect of data races in the parallel execution.
+
+\begin{enumerate}[label=\Alph*)]
+    \item Parallel regions \\
+    \textbf{1.hello.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item 24 since the boada server has 24 cores so \emph{OpenMP} defaults to 24 threads.
+        \item If we specify the number of threads that \emph{OpenMP} can use with the environment variable \texttt{OMP\_NUM\_THREADS=4} we will only
+        see 4 \texttt{"Hello World!"} messages.
+    \end{enumerate}
+    \textbf{2.hello.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item Since the variable \texttt{id} is shared by default, there are times when the number displayed are not correct.
+        (There are pairs of Hello that share the same number or numbers that don't appear). To fix this we have to add
+        the clause \texttt{private(id)} to our directive.
+        \item The lines not always are printed in the same order and sometimes they appear inter-mixed since the execution is parallel and some threads might end before the others.
+    \end{enumerate}
+    \textbf{3.howmany.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item There are printed 20 \texttt{"Hello world ..."} lines.
+        The first Hello world is printed 8 times since there are 8 threads defined with the environment
+        variable \texttt{OMP\_NUM\_THREADS}. The second Hello world runs 2 times for the first iteration of
+        the loop where we set the number of threads with the function \texttt{omp\_set\_num\_threads(i)} and
+        3 for the second iteration. The third parallel runs 4 times since we specify 4 threads on the
+        pragma. The last parallel region prints 3 times since the call \texttt{omp\_set\_num\_threads(3)} 
+        set the threads to 3. This makes a total of  8 + 2 + 3 + 4 + 3 = 20.
+        \item Inside the parallel region it returns the number of threads executed in parallel, outside it
+        returns 1 since there is only on thread.
+    \end{enumerate}
+    \textbf{4.datasharing.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item With the attribute \texttt{shared} we got that \texttt{x} is usually 120 but sometimes it gets lower values because we have a race condition since += reads the value and then writes to it.
+        With \texttt{private} attribute \texttt{x} is always 5 since it's private each thread has its own value of x
+        that is independent from the \texttt{x} of the main thread, so \texttt{x} is never updated.
+        With \texttt{firstprivate} it's also 5 since its the same as \texttt{private} but with the only difference that the variable \texttt{x} of
+        each thread is initialized with the value on the main thread and with \texttt{private} it's not.
+        Finally, with \texttt{reduction} it's always 125. Which is $5 + 1 + 2 + \dots + 16$.
+    \end{enumerate}
+    \item Loop parallelism \\
+    \textbf{1.schedule.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item  % Aqui metemos una tabla, no? YES
+    \end{enumerate}
+    \textbf{2.nowait.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item The only possible sequences of \texttt{printf} are: % esto no lo tengo claro, pork si es dynamic i no se espera puede que pase qualquier combinacion, no? PUES TIENE PINTA QUE ES LO TUYO, ASÍ QUE DECIMOS ESO Y PONEMOS UN EJEMPLO (ya lo hago yo).
+        \begin{quote}
+            \texttt{Loop 1: thread (0) gets iteration 0 \\
+            Loop 1: thread (1) gets iteration 1 \\
+            Loop 2: thread (2) gets iteration 2 \\
+            Loop 2: thread (3) gets iteration 3}
+        \end{quote}
+        also:
+        \begin{quote}
+            \texttt{Loop 1: thread (0) gets iteration 0 \\
+            Loop 1: thread (1) gets iteration 1 \\
+            Loop 2: thread (3) gets iteration 2 \\
+            Loop 2: thread (2) gets iteration 3}
+        \end{quote}
+        and:
+        \begin{quote}
+            \texttt{Loop 1: thread (0) gets iteration 0 \\
+            Loop 1: thread (3) gets iteration 1 \\
+            Loop 2: thread (1) gets iteration 2 \\
+            Loop 2: thread (2) gets iteration 3}
+        \end{quote}
+        \item If we remove the \texttt{nowait}, the iterations must finish before the loop continues, so Loop 1 will always output before Loop 2.
+        %  Pues nose, borraamos los ejemplos o como lo explico? YO SI BORRARIA LOS EJEMPLOS CON LO QUE DICES YA QUEDA CLARO CREO YO.
+        In this case the only possible sequences are:
+        \begin{quote}
+            \texttt{Loop 1: thread (0) gets iteration 0 \\
+            Loop 1: thread (1) gets iteration 1 \\
+            Loop 2: thread (2) gets iteration 2 \\
+            Loop 2: thread (3) gets iteration 3}
+        \end{quote}
+        and:
+        \begin{quote}
+            \texttt{Loop 1: thread (1) gets iteration 0 \\
+            Loop 1: thread (0) gets iteration 1 \\
+            Loop 2: thread (3) gets iteration 2 \\
+            Loop 2: thread (2) gets iteration 3}
+        \end{quote}
+        
+        \item If we change \texttt{dynamic} to \texttt{static}, the order of assignment of the threads will be the same,
+        even with the \texttt{nowait} clause. And only 2 threads will be used since the for loops have 2 iterations.
+        \begin{quote}
+            \texttt{Loop 1: thread (0) gets iteration 0 \\
+            Loop 1: thread (1) gets iteration 1 \\
+            Loop 2: thread (0) gets iteration 2 \\
+            Loop 2: thread (1) gets iteration 3}
+        \end{quote}
+        
+    \end{enumerate}
+    \textbf{3.collapse.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item As shown in the next table, the thread 0 execute the first four iterations, the thread 1 executes the next three consecutive iterations and so on until the thread number 7 executes the three last iterations of the loop.
+        \begin{table}[H]%se puede borrar perfectamente
+        \centering
+        \begin{tabular}{cl}
+        \toprule
+            Thread & Iterations \\
+        \midrule
+            0   & $(0\, 0) \rightarrow (0\, 3)$ \\
+            1   & $(0\, 4) \rightarrow (1\, 1)$ \\
+            2   & $(1\, 2) \rightarrow (1\, 4)$ \\
+            3   & $(2\, 0) \rightarrow (2\, 2)$ \\
+            4   & $(2\, 3) \rightarrow (3\, 0)$ \\
+            5   & $(3\, 1) \rightarrow (3\, 3)$ \\
+            6   & $(3\, 4) \rightarrow (4\, 1)$ \\
+            7   & $(4\, 2) \rightarrow (4\, 4)$ \\
+        \bottomrule
+        \end{tabular}
+        \label{tab:3.collapse-thread-iterations}
+        \end{table}
+        \item Without \texttt{collapse} it's not correct, not all indices of the matrix are shown, because \texttt{j} is declared
+        before the pragma and therefore it's shared among the threads which. We should add the \texttt{private(j)} clause so that the different 
+        threads don't interfere with one another.
+
+    \end{enumerate}
+    \item Synchronization \\
+    \textbf{1.datarace.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item We tried 100 executions of the program with: 
+        
+        \texttt{for i in \{1..100\}; do ./1.datarace; done | grep Sorry -c}
+        
+        and we got 100 wrong 0, 
+        correct. The program almost always will produce the wrong output. This happens because there is a data race when reading and updating the value
+        of the shared variable \texttt{x}.
+        \item To make it correct we must make sure that the reads and writes to \texttt{x} of the threads are properly synchronized. We can do that
+        by replacing the clause \texttt{shared(x)} by \texttt{reduction(+: x)}. Another option is to add the directive \texttt{\#pragma omp atomic} or 
+        \texttt{\#pragma omp critical} before the instruction \texttt{x++}.
+    \end{enumerate}
+    \textbf{2.barrier.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item We can predict that all threads will output first their going to sleep messages and since the time it takes to display the message is
+        much less than the time the threads sleep and we have enough threads they fill most certainly output the message of waking up after all the threads
+        have printed their sleep messages, although there is no guarantee. Once they \emph{all} threads print their wake up messages, the barrier will
+        unlock and they will display the \emph{We are all awake!} message, this time there is a barrier so its guaranteed that no thread will
+        reach the \emph{We are all awake!} message before all threads have reached the barrier.
+        
+        It seems there is no specific order in which the threads exit the barrier although in our experiments, most of the time, the last thread that
+        outputs the \emph{wakes up and enters barrier} message is the first to exit it.
+    \end{enumerate}
+    \textbf{3.ordered.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item The order of the \emph{Outside} messages is non-deterministic since it depends on the dynamic scheduling of the threads.
+        In the other hand, the order of the \emph{Inside} messages is always the same relative to themselves and they follow the order
+        that the loop would have if executed sequentially (0, 1, 2, \dots, N).
+        \item If we modify the clause \texttt{schedule} to include a chunk size of 2 like so: \texttt{schedule( dynamic, 2)} the tasks
+        will get assigned 2 consecutive iteration of the loop.
+    \end{enumerate}
+    \item Tasks \\
+    \textbf{1.single.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item Since we have the \texttt{nowait} clause on our \texttt{single} directive, all four threads are assigned the single clauses
+        of the loop without waiting for them to finish. They appear to be executed in burst since although we have \texttt{nowait}, we only
+        have 4 threads so they all run 4 tasks, sleep for 1 second, they finish roughly at the same time and get assigned to the 4 next iterations.
+    \end{enumerate}
+    \textbf{2.fibtasks.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item Because there is no \mintinline{cpp}{#pragma omp parallel} directive and therefore no threads are created.
+        \item To execute it correctly in parallel we have to add \mintinline{cpp}{#pragma omp parallel}
+         and \mintinline{cpp}{#pragma omp single} and the clause \texttt{firstprivate(p)} As shown below:
+
+    \begin{minted}[firstnumber=66]{cpp}
+#pragma omp parallel
+#pragma omp single
+while (p != NULL) {
+    printf("Thread %d creating task that will compute %d\n", omp_get_thread_num(), p->data);
+    #pragma omp task firstprivate(p)
+        processwork(p);
+    p = p->next;
+}
+    \end{minted}
+     
+    \end{enumerate}
+    \textbf{3.synchtasks.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item As we can see in Figure~\ref{graph:3synchtasks} \texttt{foo1} and \texttt{foo2} must be done before \texttt{foo4} and at the same time \texttt{foo4} before \texttt{foo5}.
+        \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.4\textwidth]{3.synchtasks_taskDependence.png}
+        \caption{Task dependence graph of \texttt{3.synchtasks.c}}
+        \label{graph:3synchtasks}
+        \end{figure}
+        \item .
+        
+        \begin{minted}[firstnumber=41]{cpp}
+int main(int argc, char *argv[]) {
+    #pragma omp parallel
+    #pragma omp single
+    {
+    	printf("Creating task foo1\n");
+    	//#pragma omp task depend(out:a)
+        #pragma omp task
+    	foo1();
+    	printf("Creating task foo2\n");
+    	//#pragma omp task depend(out:b)
+        #pragma omp task
+    	foo2();
+    	printf("Creating task foo3\n");
+    	//#pragma omp task depend(out:c)
+        #pragma omp task
+    	foo3();
+    	printf("Creating task foo4\n");
+    	//#pragma omp task depend(in: a, b) depend(out:d)
+        #pragma omp taskwait
+        #pragma omp task
+    	foo4();
+    	printf("Creating task foo5\n");
+    	//#pragma omp task depend(in: c, d)
+        #pragma omp taskwait
+        #pragma omp task
+    	foo5();
+    }
+    return 0;
+}
+        \end{minted}
+    \end{enumerate}
+    \textbf{4.taskloop.c:}
+    \begin{enumerate}[label=\arabic*.]
+        \item With \texttt{grainsize} each task gets 6 iterations.
+        With \texttt{num\_tasks} each task gets 3 iterations, this is due to the fact that there are 4 threads (which is less
+        than 5) and 12 iterations, so each task gets $\frac{12}{3} = 4$ iterations of the loop.
+        \item If we add the \texttt{nogroup} clause, the taskloop does not create an implicit \texttt{taskgroup} and therefore the program
+        does not wait for the execution of the first loop to finish before moving to the next step.
+    \end{enumerate}
 \end{enumerate}
 
-\section{Observing overheads}%
+\section{Observing overheads}
 \label{sec:observing_overheads}
+% Please explain in this section of your deliverable the main results obtained and your conclusions in terms of overheads for parallel,task and the
+% different synchronisation mechanisms.  Include any tables/plots that support your conclusions.
+
+\subsection{Synchronisation overheads}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+    & 1 thread & 4 threads & 8 threads \\
+\midrule
+    \texttt{Atomic}      & 1.820260s     & 6.537028s     & 6.638720s     \\
+    \texttt{Critical}    & 4.358014s     & 37.993402s    & 35.054946s    \\
+    \texttt{Reduction}   & 1.838303s     & 0.475096s     & 0.251802s     \\
+    \texttt{Sumlocal}    & 1.844493s     & 0.482096s     & 0.249314s     \\
+\bottomrule
+\end{tabular}
+%la podemos poner como tabla de siunitx %
+\label{tab:}
+\end{table}
+
+
+
+\subsection{Thread creation and termination}
+
+\subsection{Task creation and synchronization}
 
 \end{document}
